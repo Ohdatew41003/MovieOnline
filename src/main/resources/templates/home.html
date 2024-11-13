@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<!--suppress ALL -->
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/9011056154.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style2.css">
+    <script language="javascript" src></script>
+    <link rel="icon" type="image/x-icon" href="/assets/icon.ico"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    <title>Movie System</title>
+    <style>
+        .dropdown-container:hover .dropdown {
+            display: grid;
+            width: auto;
+            background-color: #272727;
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .dropdown a{
+            display: block;
+            padding: 15px;
+            font-size: medium;
+            font-weight: 500;
+            width: fit-content;
+            white-space: nowrap;
+        }
+
+        .close-forgot, .close-otp{
+            position: absolute;
+            top: 0;
+            right: 0;
+            border: 1px solid #3498db;
+            padding: 4px 9px;
+            color: #3498db;
+            background-color: #242628;
+            box-sizing: border-box;
+        }
+
+        .close-forgot:hover, .close-forgot:hover{
+            background-color: #3498db;
+            color: #242628;
+        }
+
+        .user-avatar {
+            position: relative;
+        }
+
+        .user-avatar img {
+            height: 40px;
+            width: 40px;
+            border-radius: 50%;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #1e2122;
+            min-width: 160px;
+            box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+            padding: 12px 16px;
+            z-index: 1;
+            right: 0;
+        }
+
+        .dropdown-content span {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .dropdown-content span:hover {
+            background-color: #1e2122;
+            color: #d28c19;
+        }
+
+        .user-avatar:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+
+
+<body>
+<div class="fbody">
+    <nav id="home" class="navbar">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/}"><img src="/img/icon.png" alt=""
+                                                        style="height: 60px; width: 200px"></a>
+            <div></div>
+            <form class="d-flex" th:action="@{/search}" method="get">
+                <label for="search" class="form-label">
+                    <input id="search" name="search" class="form-search form-control ms-5 me-2" type="search"
+                           placeholder="Search" aria-label="Search">
+                </label>
+                <button class="btn btn-outline-light" type="submit">Search</button>
+            </form>
+            <div class="dndk" th:if="${session.user == null}">
+                <input class="btn btn-outline-light openl" id="bt" type="button" value="Login">
+                <input class="btn btn-outline-light opens" id="btn2" type="button" value="Sign Up">
+            </div>
+            <div class="user-avatar" id="userAvatar" th:if="${session.user != null}" style="cursor: pointer;">
+                <img th:src="${session.user.getAvatar()}" alt="User Avatar" style="height: 40px; width: 40px; border-radius: 50%;">
+                <div class="dropdown-content" id="dropdownContent" style="z-index: 999999">
+                    <span>
+                        <i class="fa-regular fa-user"></i>
+                        <a th:href="@{/profile}">Profile</a>
+                    </span>
+                    <span th:if="${#strings.equals(session.user.role, 'admin')}">
+                        <i class="fa-solid fa-user-tie"></i>
+                        <a th:href="@{/admin}">Admin</a>
+                    </span>
+                    <span>
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <a th:href="@{/logout}">Logout</a>
+                    </span>
+                </div>
+            </div>
+
+            <script>
+                window.onclick = function(event) {
+                    if (!event.target.matches('.user-avatar')) {
+                        const dropdowns = document.getElementsByClassName("dropdown-content");
+                        for (let i = 0; i < dropdowns.length; i++) {
+                            const openDropdown = dropdowns[i];
+                            if (openDropdown.classList.contains('show')) {
+                                openDropdown.classList.remove('show');
+                            }
+                        }
+                    }
+                }
+            </script>
+        </div>
+    </nav>
+
+    <header>
+        <div class="container">
+            <div class="toolbar" style="justify-content: space-between">
+                <a th:href="@{/}">Trang chủ</a>
+                <div class="dropdown-container">
+                    <a>Thể loại</a>
+                    <div class="dropdown" style="z-index: 9999">
+                        <a th:each="genre : ${genres}" th:href="@{/filter(category=${genre})}" th:text="${genre}"></a>
+                    </div>
+                </div>
+                <div class="dropdown-container">
+                    <a>Quốc gia</a>
+                    <div class="dropdown" style="z-index: 9999">
+                        <a th:each="nation : ${nations}" th:href="@{/filter(category=${nation})}" th:text="${nation}"></a>
+                    </div>
+                </div>
+                <div class="dropdown-container">
+                    <a>Phim mới</a>
+                    <div class="dropdown" style="z-index: 9999">
+                        <a th:each="year : ${releaseDates}" th:href="@{/filter(category=${year})}" th:text="${year}"></a>
+                    </div>
+                </div>
+                <a th:href="@{/filter(category=series)}">Phim bộ</a>
+                <a th:href="@{/filter(category=feature-film)}">Phim lẻ</a>
+                <a th:href="@{/filter(category=english-language-films)}">Phim chiếu rạp</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Swiper -->
+    <div id="home" class=container>
+        <div class="swiper mySwiper">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide" th:each="movie : ${carousel}">
+                    <a th:href="@{/information(movie_id=${movie.getMovieId()})}">
+                        <img th:src="${movie.getPoster()}" alt="Image 1" style="height: 210px;">
+                    </a></div>
+            </div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+        <script>
+            const swiper = new Swiper(".mySwiper", {
+                rewind: true,
+                slidesPerView: 5,
+                spaceBetween: 30,
+                navigation: {
+                    nextEl: ".swiper-button-next",
+                    prevEl: ".swiper-button-prev",
+                },
+                autoplay: {
+                    delay: 2500,
+                    disableOnInteraction: false,
+                },
+            });
+        </script>
+
+        <div class="search">
+            <form id="form-filter" class="form-inline" method="GET" th:action="@{/filterBy}">
+
+                <div class="list-search">
+                    <label for="filter-eptype">Tiến độ</label>
+                    <select class="form-control" id="filter-eptype" name="status">
+                        <option value="Tất cả">Tất cả</option>
+                        <option value="Hoàn thành">Hoàn thành</option>
+                        <option value="Đang tiến hành">Đang tiến hành</option>
+                    </select>
+                </div>
+
+                <div class="list-search">
+                    <label for="filter-category">Thể loại</label>
+                    <select id="filter-category" name="genre" class="form-control">
+                        <option value="Tất cả">Tất cả</option>
+                        <option th:each="genre : ${genres}" th:value="${genre}" th:text="${genre}"></option>
+                    </select>
+
+                </div>
+                <div class="list-search">
+                    <label for="filter-year">Năm phát hành</label>
+                    <select id="filter-year" name="year" class="form-control">
+                        <option value="Tất cả">Tất cả</option>
+                        <option th:each="year:${releaseDates}" th:value="${year}" th:text="${year}"></option>
+                    </select>
+                </div>
+                <div class="list-search">
+                    <label for="filter-sort">Sắp xếp</label>
+                    <select class="form-control" id="filter-sort" name="sort">
+                        <option value="Tất cả">Tất cả</option>
+                        <option value="Lượt xem">Lượt xem</option>
+                        <option value="Điểm đánh giá">Điểm đánh giá</option>
+                    </select>
+                </div>
+                <button type="submit" id="btn-movie-filter" class="btn btn-blue btn-filter-movie"><span>Áp dụng</span>
+                </button>
+            </form>
+        </div>
+        <ul class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item" th:if="${navigation != null}">
+                <a th:href="@{/filter(category=${navigation == 'Phim bộ' ? 'series' :
+                    (navigation == 'Phim lẻ' ? 'feature-film' :
+                    (navigation == 'Phim đã hoàn thành' ? 'complete' : ''))})}"
+                   th:text="${navigation}"></a>
+            </li>
+        </ul>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="list-all-film">
+                    <div class="pa-title" th:if="${!navigation.contains('Kết quả tìm kiếm')}">
+                        <a th:href="@{/filter(category=series)}">
+                            <div th:class="${navigation == 'Phim bộ' ? 'pa-title-item active' : 'pa-title-item'}">Phim
+                                bộ mới cập nhật
+                            </div>
+                        </a>
+                        <a th:href="@{/filter(category=feature-film)}">
+                            <div th:class="${navigation == 'Phim lẻ' ? 'pa-title-item active' : 'pa-title-item'}">Phim
+                                lẻ mới cấp nhật
+                            </div>
+                        </a>
+                        <a th:href="@{/filter(category=complete)}">
+                            <div th:class="${navigation == 'Phim đã hoàn thành' ? 'pa-title-item active' : 'pa-title-item'}">
+                                Phim đã hoàn thành
+                            </div>
+                        </a>
+                    </div>
+                    <div class="row" style="margin-left: 0;margin-right: 0;">
+                        <div class="movie col-lg-3 col-md-6" th:each="movie : ${movies}">
+                            <a th:href="@{/information(movie_id=${movie.getMovieId()})}">
+                                <div class="movie-item text-center">
+                                    <img class="imgh img-fluid" th:src="${movie.getPoster()}" alt=""
+                                         style="object-fit: cover; height: 210px;">
+                                    <div class="movie-meta">
+                                        <div class="movie-name" th:text="${movie.getTitle()}"></div>
+                                        <p class="p1" th:text="'Lượt xem: ' + ${movie.getTotalView()}"></p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div id="filter" class="pagination" th:if="${cartoon == null && favorite == null
+                        && moviesPage.totalPages > 1 && #strings.equals(dividerPage, 'filter')}">
+                    <a th:if="${moviesPage.hasPrevious()}"
+                       th:href="@{/filter(category=${categoryFilter}, page=*{0}, size=${moviesPage.size})}">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                    <a th:each="i : ${#numbers.sequence(0, moviesPage.totalPages - 1)}"
+                       th:class="${moviesPage.number == i ? 'paitem active' : 'paitem'}"
+                       th:href="@{/filter(category=${categoryFilter}, page=*{i}, size=${moviesPage.size})}"
+                       th:text="${i + 1}"></a>
+                    <a th:if="${moviesPage.hasNext()}"
+                       th:href="@{/filter(category=${categoryFilter}, page=*{moviesPage.totalPages - 1}, size=${moviesPage.size})}"
+                       aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </div>
+                <div id="search" class="pagination" th:if="${cartoon == null && favorite == null
+                        && moviesPage.totalPages > 1 && #strings.equals(dividerPage, 'search')}">
+                    <a th:if="${moviesPage.hasPrevious()}"
+                       th:href="@{/search(search=${searchSearch}, page=*{0}, size=${moviesPage.size})}">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                    <a th:each="i : ${#numbers.sequence(0, moviesPage.totalPages - 1)}"
+                       th:class="${moviesPage.number == i ? 'paitem active' : 'paitem'}"
+                       th:href="@{/search(search=${searchSearch}, page=*{i}, size=${moviesPage.size})}"
+                       th:text="${i + 1}"></a>
+                    <a th:if="${moviesPage.hasNext()}"
+                       th:href="@{/search(search=${searchSearch}, page=*{moviesPage.totalPages - 1}, size=${moviesPage.size})}"
+                       aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </div>
+                <div id="filterBy" class="pagination" th:if="${cartoon == null && favorite == null
+                        && moviesPage.totalPages > 1 && #strings.equals(dividerPage, 'filterBy')}">
+                    <a th:if="${moviesPage.hasPrevious()}"
+                       th:href="@{/filterBy(status=${statusFilterBy}, gender=${genreFilterBy},
+                                year=${yearFilterBy}, sort=${sortFilterBy}, page=*{0}, size=${moviesPage.size})}">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                    <a th:each="i : ${#numbers.sequence(0, moviesPage.totalPages - 1)}"
+                       th:class="${moviesPage.number == i ? 'paitem active' : 'paitem'}"
+                       th:href="@{/filterBy(status=${statusFilterBy}, genre=${genreFilterBy},
+                                year=${yearFilterBy}, sort=${sortFilterBy}, page=*{i}, size=${moviesPage.size})}"
+                       th:text="${i + 1}"></a>
+                    <a th:if="${moviesPage.hasNext()}"
+                       th:href="@{/filterBy(status=${statusFilterBy}, genre=${genreFilterBy},
+                                year=${yearFilterBy}, sort=${sortFilterBy}, page=*{moviesPage.totalPages - 1}, size=${moviesPage.size})}"
+                       aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </div>
+
+                <div class="list-all-film" th:if="${cartoon != null}">
+                    <a th:href="@{/filter(category='hoạt hình')}">
+                        <div class="pa-title-item-1">Phim hoạt hình</div>
+                    </a>
+                    <div class="row" style="margin-left: 0;margin-right: 0;">
+                        <div class="movie col-lg-3 col-md-6" th:each="movie : ${cartoon}">
+                            <a th:href="@{/information(movie_id=${movie.getMovieId()})}">
+                                <div class="movie-item text-center">
+                                    <img class="imgh img-fluid" th:src="${movie.getPoster()}" alt=""
+                                         style="object-fit: cover; height: 210px;">
+                                    <div class="movie-meta">
+                                        <div class="movie-name" th:text="${movie.getTitle()}"></div>
+                                        <p class="p1" th:text="'Lượt xem: ' + ${movie.getTotalView()}"></p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-all-film" th:if="${favorite != null}">
+                    <a th:href="@{/filter(category=favorite)}">
+                        <div class="pa-title-item-1">Được yêu thích</div>
+                    </a>
+                    <div class="row" style="margin-left: 0;margin-right: 0;">
+                        <div class="movie col-lg-3 col-md-6" th:each="movie : ${favorite}">
+                            <a th:href="@{/information(movie_id=${movie.getMovieId()})}">
+                                <div class="movie-item text-center">
+                                    <img class="imgh img-fluid" th:src="${movie.getPoster()}" alt=""
+                                         style="object-fit: cover; height: 210px;">
+                                    <div class="movie-meta">
+                                        <div class="movie-name" th:text="${movie.getTitle()}"></div>
+                                        <p class="p1" th:text="'Lượt xem: ' + ${movie.getTotalView()}"></p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="listall" style="margin-top: 10px">
+                    <a>
+                        <div class="pa-title-item-2">Phim vừa ra mắt</div>
+                    </a>
+                    <div class="content" th:each="top6Movie : ${top6MoviesNewest}" style="margin: 5px 0 5px 0;">
+                        <a th:title="${top6Movie.getTitle()}"
+                           th:href="@{/information(movie_id=${top6Movie.getMovieId()})}">
+                            <span class="status"
+                                  th:text="${top6Movie.getEpisodes().size() + '/' + top6Movie.getTotalEpisode()}">04/??</span>
+                            <div class="list-top-movie-item-thumb"
+                                 th:style="'background-image: url(' + ${top6Movie.getPoster()} + ')'"></div>
+                            <div class="list-top-movie-item-info">
+                                <span class="list-top-movie-item-vn" th:text="${top6Movie.getTitle()}"></span>
+                                <span class="list-top-movie-item-view" th:text="${top6Movie.getReleaseDate()}"></span>
+                                <span class="list-top-movie-item-view"
+                                      th:text="${top6Movie.getTotalView() + ' Lượt xem'}"></span>
+                            </div>
+                        </a>
+                        <br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="row justify-content-between">
+                <div class="col-auto">
+                    <p>Copyrights @Tổ 5. All Rights reserved</p>
+                </div>
+                <div class="col-auto">
+                    <p>Designed by <a th:href="@{'https://www.facebook.com/kienk4.me/'}" target="_blank">Movie System</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+<div id="login" class="bg-img">
+    <div class="contenlogin">
+        <input type="button" class="close" value="X">
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const btn = document.querySelector('.close');
+            const btno = document.querySelector('.openl');
+            const tat = document.querySelector('.bg-img');
+            const bd = document.querySelector('.fbody');
+            btn.addEventListener('click', function () {
+                tat.style.display = "none";
+                bd.style.opacity = "1";
+            })
+            btno.addEventListener('click', function () {
+                tat.style.display = "block";
+                bd.style.opacity = "0.1";
+            })
+
+            const showLogin = /*[[${showLogin}]]*/ false;
+            if(showLogin){
+                tat.style.display = "block";
+                bd.style.opacity = "0.1";
+            }
+            function hideLogin() {
+                tat.style.display = "none";
+                bd.style.opacity = "1";
+            }
+            /*]]>*/
+        </script>
+        <header>Login</header>
+        <form th:action="@{/login}" method="post">
+            <div class="field">
+                <span class="fa fa-user"></span>
+                <label for="email-login" style="width: 266px;">
+                    <input id="email-login" name="email" type="text" required placeholder="Email">
+                </label>
+            </div>
+            <div class="field space">
+                <span class="fa fa-lock"></span>
+                <label for="password" style="width: 266px;">
+                    <input id="password" name="password" type="password" class="pass-key" required placeholder="Password">
+                </label>
+                <span class="show" style="display: inline-block;">SHOW</span>
+            </div>
+            <div class="error-message" style="color: red; margin-bottom: 10px;"
+                 th:if="${error != null}" th:text="${error}"></div>
+            <div class="pass" style="display: flex; float: right;">
+                <a onclick="showReset()" style="cursor: pointer;">Forgot Password?</a>
+            </div>
+            <div class="field">
+                <input type="submit" value="LOGIN">
+            </div>
+        </form>
+        <div class="signup">Don't have account?
+            <input type="button" class="changes" value="Sign Up">
+        </div>
+    </div>
+</div>
+
+<script>
+    const pass_field = document.querySelector('.pass-key');
+    const showBtn = document.querySelector('.show');
+    showBtn.addEventListener('click', function () {
+        if (pass_field.type === "password") {
+            pass_field.type = "text";
+            showBtn.textContent = "HIDE";
+            showBtn.style.color = "#3498db";
+        } else {
+            pass_field.type = "password";
+            showBtn.textContent = "SHOW";
+            showBtn.style.color = "#222";
+        }
+    });
+</script>
+
+
+<div id="signup" class="bg-img-si">
+    <div class="contensignup">
+        <input type="button" class="closes" value="X">
+        <script th:inline="javascript">
+            const btn1 = document.querySelector('.closes');
+            const btns = document.querySelector('.opens');
+            const tat1 = document.querySelector('.bg-img-si');
+            btn1.addEventListener('click', function () {
+                tat1.style.display = "none";
+                bd.style.opacity = "1";
+            })
+            btns.addEventListener('click', function () {
+                tat1.style.display = "block";
+                bd.style.opacity = "0.1";
+            })
+
+            /*<![CDATA[*/
+            const showRegister = /*[[${showRegister}]]*/ false;
+            if(showRegister){
+                hideLogin()
+                tat1.style.display = "block";
+                bd.style.opacity = "0.1";
+            }
+            function hideSignup() {
+                tat1.style.display = "none";
+                bd.style.opacity = "1";
+            }
+            /*]]>*/
+        </script>
+        <header>Sign Up</header>
+        <form th:action="@{/register}" method="post">
+            <div class="field">
+                <span class="fa fa-user"></span>
+                <label for="email-register" style="width: 266px;">
+                    <input id="email-register" name="email" type="text" required placeholder="Email">
+                </label>
+            </div>
+            <div class="field space">
+                <span class="fa fa-lock"></span>
+                <label for="pass" style="width: 266px;">
+                    <input id="pass" name="password" type="password" class="pass-key" required placeholder="Password">
+                </label>
+                <span class="show">SHOW</span>
+            </div>
+            <div class="field space">
+                <span class="fa fa-lock"></span>
+                <label for="confirm_pass" style="width: 266px;">
+                    <input id="confirm_pass" name="confirmPassword" type="password" class="pass-key" required
+                           placeholder="Confirm Your Password">
+                </label>
+                <span class="show">SHOW</span>
+            </div>
+            <div class="error-register" style="color: red; margin-bottom: 10px;"
+                 th:if="${error_register != null}"
+                 th:text="${error_register}"></div>
+            <div class="field" style="margin: 15px 0;">
+                <input type="submit" value="SIGN UP">
+            </div>
+        </form>
+        <div class="signup">Have account?
+            <input type="button" class="changel" value="Login">
+            <script th:inline="javascript">
+                const btnchangel = document.querySelector('.changel');
+                btnchangel.addEventListener('click', function () {
+                    tat1.style.display = "none";
+                    tat.style.display = "block";
+                })
+                const btnchanges = document.querySelector('.changes');
+                btnchanges.addEventListener('click', function () {
+                    tat.style.display = "none";
+                    tat1.style.display = "block";
+                })
+            </script>
+        </div>
+    </div>
+</div>
+
+<div id="forgot" class="bg-img-forgot" style="display: none;">
+    <div class="contensignup">
+        <input type="button" class="close-forgot" value="X">
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const btn_forgot = document.querySelector('.close-forgot');
+            const display_forgot = document.querySelector('.bg-img-forgot');
+            btn_forgot.addEventListener('click', function () {
+                display_forgot.style.display = "none";
+                bd.style.opacity = "1";
+            })
+            const show_Reset = /*[[${showReset}]]*/ false;
+            if(show_Reset){
+                showReset()
+            }
+            function showReset() {
+                hideLogin()
+                hideSignup()
+                display_forgot.style.display = "block";
+                bd.style.opacity = "0.1";
+            }
+            function hideReset() {
+                display_forgot.style.display = "none";
+                bd.style.opacity = "1";
+            }
+            /*]]>*/
+        </script>
+        <header>Reset Password</header>
+        <form th:action="@{/reset}" method="post">
+            <div class="field">
+                <span class="fa fa-user"></span>
+                <label for="email-reset" style="width: 266px;">
+                    <input id="email-reset" name="email" type="text" required placeholder="Email">
+                </label>
+            </div>
+            <div class="reset-password-message" style="color: green; margin-bottom: 10px;"
+                 th:if="${reset != null}"
+                 th:text="${reset}"
+                 th:style="${reset.toLowerCase().contains('mật khẩu đã được gửi') ? 'color: green' : 'color: red'}"></div>
+            <div class="field" style="margin: 15px 0;">
+                <input type="submit" value="SEND PASSWORD">
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="otp" class="bg-img-otp" style="display: none;">
+    <div class="contensignup">
+        <input type="button" class="close-otp" value="X">
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const btn_otp= document.querySelector('.close-otp');
+            const display_otp = document.querySelector('.bg-img-otp');
+            btn_otp.addEventListener('click', function () {
+                display_otp.style.display = "none";
+                bd.style.opacity = "1";
+            })
+            const show_otp = /*[[${showOTP}]]*/ false;
+            if(show_otp){
+                showOtp()
+            }
+            function showOtp() {
+                hideLogin()
+                hideSignup()
+                display_otp.style.display = "block";
+                bd.style.opacity = "0.1";
+            }
+            function hideOtp() {
+                display_otp.style.display = "none";
+                bd.style.opacity = "1";
+            }
+            /*]]>*/
+        </script>
+        <header>Verification</header>
+        <form id="verificationForm" th:action="@{/code}" method="post" onsubmit="submitForm()">
+            <div class="countdown">
+                <div class="countdown" id="countdown">Thời gian xác thực còn lại: </div>
+            </div>
+            <div class="field">
+                <span class="fa-solid fa-envelope"></span>
+                <label for="code" style="width: 266px;">
+                    <input id="code" name="code" type="text" required placeholder="OTP Code">
+                </label>
+            </div>
+            <div class="confirm-code" style="color: red; margin-bottom: 10px;"
+                 th:if="${error_code != null}"
+                 th:text="${error_code}"></div>
+            <div class="field" style="margin: 15px 0;">
+                <input type="submit" value="VERIFICATION">
+            </div>
+        </form>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            let countdownValue = 180;
+
+            function updateCountdown() {
+                const countdownElement = document.getElementById('countdown');
+                countdownElement.innerHTML = 'Thời gian xác thực còn lại: ' + formatCountdown(countdownValue);
+                countdownValue--;
+
+                if (countdownValue >= 0) {
+                    setTimeout(updateCountdown, 1000);
+                }
+            }
+
+            function formatCountdown(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return minutes + ':' + (remainingSeconds < 10 ? '0' : '') + remainingSeconds;
+            }
+
+            function submitForm() {
+                const form = document.getElementById('verificationForm');
+
+                const countdownField = document.createElement('input');
+                countdownField.type = 'hidden';
+                countdownField.name = 'countdown';
+                countdownField.value = countdownValue;
+                form.appendChild(countdownField);
+
+                return true;
+            }
+
+            updateCountdown();
+            /*]]>*/
+        </script>
+    </div>
+</div>
+</body>
+
+</html>
